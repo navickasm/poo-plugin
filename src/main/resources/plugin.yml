@@ -1,0 +1,19 @@
+name: poo
+version: '1.0'
+main: dev.navickasm.poo.Poo
+api-version: '1.21'
+authors: [ 'Mack Navickas' ]
+description: 'Spawns poo when player crouches; toggleables'
+
+commands:
+  poo:
+    description: Toggles the spawning of poo or sets the chance.
+    usage: /poo <toggle|chance [value%]>
+
+permissions:
+  poo.toggle:
+    description: Allows toggling the Poo plugin.
+    default: op
+  poo.chance:
+    description: Allows setting the chance for cocoa beans to drop.
+    default: op
