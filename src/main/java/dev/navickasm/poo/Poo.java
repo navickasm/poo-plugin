@@ -1,9 +1,11 @@
 package dev.navickasm.poo;
 
 import net.md_5.bungee.api.ChatColor;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
@@ -16,20 +18,24 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 
 import java.util.List;
+import java.util.Random;
 
 public class Poo extends JavaPlugin implements Listener {
 
     private static final String KEY = "POO";
 
     private boolean functionalityEnabled = false;
-
     private double randomPercent = 1.0;
+    private int despawnTicks = 10;
+
+    private final Random random = new Random();
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         functionalityEnabled = getConfig().getBoolean("enabled", false);
         randomPercent = getConfig().getDouble("chance", 1.0);
+        despawnTicks = getConfig().getInt("despawn-ticks", 10);
 
         getServer().getPluginManager().registerEvents(this, this);
     }
@@ -38,18 +44,31 @@ public class Poo extends JavaPlugin implements Listener {
     public void onDisable() {
         getConfig().set("enabled", functionalityEnabled);
         getConfig().set("chance", randomPercent);
+        getConfig().set("despawn-ticks", despawnTicks);
         saveConfig();
     }
 
     @EventHandler
     public void onPlayerToggleSneak(PlayerToggleSneakEvent event) {
-        if (functionalityEnabled && event.isSneaking()) {
-            if (Math.random() < randomPercent) {
-                Location l = event.getPlayer().getLocation();
-                ItemStack is = new ItemStack(Material.COCOA_BEANS, 1);
-                Item i = l.getWorld().dropItem(l, is);
-                i.setMetadata(KEY, new FixedMetadataValue(this, true));
-            }
+        if (!functionalityEnabled || !event.isSneaking()) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+
+        if (random.nextDouble() < randomPercent) {
+            Location l = player.getLocation();
+            boolean isMeep = player.getUniqueId().toString() == "5a47b962-915c-46c6-9823-5512fb79cba2";
+            ItemStack is = new ItemStack(isMeep?Material.CARROT:Material.COCOA_BEANS, 1);
+            Item i = l.getWorld().dropItem(l, is);
+            i.setMetadata(KEY, new FixedMetadataValue(this, true));
+
+            Bukkit.getScheduler().runTaskLater(this, new Runnable() {
+                @Override
+                public void run() {
+                    i.remove();
+                }
+            }, 200);
         }
     }
 
@@ -73,7 +92,7 @@ public class Poo extends JavaPlugin implements Listener {
         if (!command.getName().equalsIgnoreCase("poo")) return false;
 
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.RED + "Usage: /poo <toggle|chance [value]>");
+            sender.sendMessage(ChatColor.RED + "Usage: /poo <toggle|chance [value%]|despawn [seconds]|cooldown [seconds]>");
             return true;
         }
 
@@ -113,6 +132,32 @@ public class Poo extends JavaPlugin implements Listener {
                 }
                 sender.sendMessage(ChatColor.AQUA + "Poo chance is now " + (randomPercent*100) + ChatColor.AQUA + "%");
                 getConfig().set("chance", randomPercent);
+                saveConfig();
+            } else {
+                sender.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
+            }
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("despawn")) {
+            if (sender.hasPermission("poo.despawn") || sender.isOp()) {
+                if (args.length < 2) {
+                    sender.sendMessage(ChatColor.RED + "Usage: /poo despawn <seconds>");
+                    return true;
+                }
+                try {
+                    int newDespawnSeconds = Integer.parseInt(args[1]);
+                    if (newDespawnSeconds < 0) {
+                        sender.sendMessage(ChatColor.RED + "Despawn seconds cannot be negative. Use 0 to prevent despawn.");
+                        return true;
+                    }
+                    despawnTicks = newDespawnSeconds;
+                } catch (NumberFormatException e) {
+                    sender.sendMessage(ChatColor.RED + "Could not interpret despawn seconds. Please use a whole number.");
+                    return false;
+                }
+                sender.sendMessage(ChatColor.AQUA + "Poo despawn set to " + despawnTicks + " seconds.");
+                getConfig().set("despawn-ticks", despawnTicks);
                 saveConfig();
             } else {
                 sender.sendMessage(ChatColor.RED + "You do not have permission to use this command.");

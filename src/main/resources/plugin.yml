@@ -7,13 +7,16 @@ description: 'Spawns poo when player crouches; toggleables'
 
 commands:
   poo:
-    description: Toggles the spawning of poo or sets the chance.
-    usage: /poo <toggle|chance [value%]>
+    description: Operates the poo plugin.
+    usage: /poo <toggle|chance [value%]|despawn [seconds]|cooldown [seconds]>
 
 permissions:
   poo.toggle:
     description: Allows toggling the Poo plugin.
     default: op
   poo.chance:
-    description: Allows setting the chance for cocoa beans to drop.
+    description: Allows setting the chance for poo to drop.
+    default: op
+  poo.despawn:
+    description: Allows setting despawn time of the poo.
     default: op

@@ -1,2 +1,3 @@
 enabled: false
 chance: 1.0
+despawn-ticks: 200 # 20 ticks typically = 1 second.
