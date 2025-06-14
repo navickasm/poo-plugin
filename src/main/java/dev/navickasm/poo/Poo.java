@@ -6,18 +6,20 @@ import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.Material;
 import org.bukkit.entity.Item;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 public class Poo extends JavaPlugin implements Listener {
@@ -58,22 +60,17 @@ public class Poo extends JavaPlugin implements Listener {
 
         if (random.nextDouble() < randomPercent) {
             Location l = player.getLocation();
-            boolean isMeep = player.getUniqueId().toString() == "5a47b962-915c-46c6-9823-5512fb79cba2";
+            boolean isMeep = Objects.equals(player.getUniqueId().toString(), "5a47b962-915c-46c6-9823-5512fb79cba2");
             ItemStack is = new ItemStack(isMeep?Material.CARROT:Material.COCOA_BEANS, 1);
-            Item i = l.getWorld().dropItem(l, is);
+            Item i = Objects.requireNonNull(l.getWorld()).dropItem(l, is);
             i.setMetadata(KEY, new FixedMetadataValue(this, true));
 
-            Bukkit.getScheduler().runTaskLater(this, new Runnable() {
-                @Override
-                public void run() {
-                    i.remove();
-                }
-            }, 200);
+            Bukkit.getScheduler().runTaskLater(this, i::remove, 200);
         }
     }
 
     @EventHandler
-    public void onPlayerPickupItem(PlayerPickupItemEvent event) {
+    public void onEntityPickupItem(EntityPickupItemEvent event) {
         Item i = event.getItem();
 
         if (i.hasMetadata(KEY)) {
@@ -88,7 +85,7 @@ public class Poo extends JavaPlugin implements Listener {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, @NotNull String[] args) {
         if (!command.getName().equalsIgnoreCase("poo")) return false;
 
         if (args.length == 0) {
