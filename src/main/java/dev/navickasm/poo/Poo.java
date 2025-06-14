@@ -7,6 +7,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
@@ -71,17 +72,26 @@ public class Poo extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onEntityPickupItem(EntityPickupItemEvent event) {
-        Item i = event.getItem();
+        if (isPooItem(event.getItem()))
+            event.setCancelled(true);
+    }
 
+    @EventHandler
+    public void onInventoryPickupItem(InventoryPickupItemEvent event) {
+        if (isPooItem(event.getItem()))
+            event.setCancelled(true);
+    }
+
+    private boolean isPooItem(Item i) {
         if (i.hasMetadata(KEY)) {
             List<MetadataValue> metadataValues = i.getMetadata(KEY);
             for (MetadataValue value : metadataValues) {
                 if (value.getOwningPlugin() == this && value.asBoolean()) {
-                    event.setCancelled(true);
-                    return;
+                    return true;
                 }
             }
         }
+        return false;
     }
 
     @Override
